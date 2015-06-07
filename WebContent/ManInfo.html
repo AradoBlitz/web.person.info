@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<style type="text/css">
+	fieldset {
+		width: 500px;
+	}
+	
+	legend {
+		font-size: 20px;
+	}
+	
+	
+</style>
+ <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+     <script>
+  $(function() {
+    $( "#birth-date" ).datepicker();
+  });
+  </script>
+</head>
+<body>
+<form id="update-infoman" >
+	<fieldset>
+	<legend>Update Person Info</legend>
+	<p><lable for="first-name">first name</lable><input id="first-name" type="text" name="firstName">
+	<p><lable for="fathers-name">fathers name</lable><input id="fathers-name" type="text" name="fathersName">
+	<p><lable for="last-name">last name</lable><input id="last-name" type="text" name="lastName">
+	<p><lable for="birth-date">birth date</lable><input id="birth-date" type="text" name="bearthDay">
+	</fieldset>
+	<p><input type="submit" value="Update"></input>
+</form>
+<table border="3">
+	<tr>
+		<td id="1">empty</td>
+		<td id="2">empty</td>
+		<td id="3">empty</td>
+		<td id="4">empty</td>
+	</tr>
+</table>
+	
+<script>
+function CollectInfoMan() {
+	var url = '/service/person';
+	$.ajax({
+	   type: 'GET',
+	    url: url,
+	    async: false,	   
+	    contentType: "application/json",	   
+	    success: function(json) {
+	       console.log(json);
+	       $("#1").text(json.firstName);
+	       $("#2").text(json.fathersName);
+	       $("#3").text(json.lastName);
+	       var formattedDate = new Date(json.bearthDay);
+	       var d = formattedDate.getDate();
+	       var m = formattedDate.getMonth();m+=1;
+	       var y = formattedDate.getFullYear();
+	       $("#4").text(d + "." + m + "." + y)
+	    },
+	    error: function(e) {
+	       console.log(e.message);
+	    }
+	});
+}
+function ConvertFormToJSON(form){
+    var array = $(form).serializeArray();
+    var json = {};
+    jQuery.each(array, function() {
+        json[this.name] = this.value || '';
+        if('bearthDay' === this.name)
+        	json[this.name]= Date.parse(this.value);
+       
+    });
+    
+    return json;
+}
+$(document).on('ready', function() {
+    CollectInfoMan();
+	$('form#update-infoman').bind('submit', function(event){
+        event.preventDefault();
+       
+        var form = this;
+        var  json = ConvertFormToJSON(form);
+        $('form#update-infoman')[0].reset();
+       console.log(json);
+        $.ajax({
+            type: "POST",
+            url: '/service/person',
+            async: false,
+            data:JSON.stringify(json),
+            contentType: "application/json",
+        }).done(function() { 
+               CollectInfoMan();
+        }).fail(function() { 
+            alert("Failed to add to-do"); 
+        });
+
+        return true;
+    });
+});
+
+
+</script>
+</body>
+</html>
